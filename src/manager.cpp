@@ -312,7 +312,10 @@ void Fastcgipp::Manager_base::handler()
 
         requestsReadLock.lock();
         if(m_terminate || (m_stop && m_requests.empty()))
+        {
+            m_wake.notify_all();
             break;
+        }
         requestsReadLock.unlock();
 #if FASTCGIPP_LOG_LEVEL > 3
         --m_activeThreads;
