@@ -2,12 +2,12 @@
  * @file       http.cpp
  * @brief      Defines elements of the HTTP protocol
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       October 9, 2018
- * @copyright  Copyright &copy; 2018 Eddie Carle. This project is released under
+ * @date       February 15, 2022
+ * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
 /*******************************************************************************
-* Copyright (C) 2018 Eddie Carle [eddie@isatec.ca]                             *
+* Copyright (C) 2022 Eddie Carle [eddie@isatec.ca]                             *
 *                                                                              *
 * This file is part of fastcgi++.                                              *
 *                                                                              *
@@ -427,7 +427,12 @@ Fastcgipp::operator>>(
                             break;
                         }
                         unsigned int value;
-                        use_facet<num_get<charT, istreambuf_iterator<charT, Traits> > >(is.getloc()).get(++read, istreambuf_iterator<charT, Traits>(), is, err, value);
+                        use_facet<num_get<charT, istreambuf_iterator<charT, Traits>>>(is.getloc()).get(
+                                ++read,
+                                istreambuf_iterator<charT, Traits>(),
+                                is,
+                                err,
+                                value);
                         *write++ = value;
                     }
                     break;
@@ -468,7 +473,7 @@ Fastcgipp::operator>>(
 
             }
 
-            if(err == ios::goodbit)
+            if(err == ios::goodbit || err == ios::eofbit)
             {
                 if(pad)
                 {
