@@ -33,6 +33,7 @@
 #include <locale>
 #include <codecvt>
 #include <cstdio>
+#include <map>
 
 using namespace Fastcgipp::SQL;
 
@@ -429,32 +430,28 @@ void Results_base::field<WTEXT>(
 
 Status Results_base::status() const
 {
+    static const std::map<ExecStatusType, Status> statuses{
+        {PGRES_EMPTY_QUERY, Status::emptyQuery},
+        {PGRES_COMMAND_OK, Status::commandOk},
+        {PGRES_TUPLES_OK, Status::rowsOk},
+        {PGRES_COPY_OUT, Status::copyOut},
+        {PGRES_COPY_IN, Status::copyIn},
+        {PGRES_BAD_RESPONSE, Status::badResponse},
+        {PGRES_NONFATAL_ERROR, Status::nonfatalError},
+        {PGRES_COPY_BOTH, Status::copyBoth},
+        {PGRES_SINGLE_TUPLE, Status::singleTuple},
+    };
+
     if(reinterpret_cast<const PGresult*>(m_res) == nullptr)
         return Status::noResult;
 
-    switch(PQresultStatus(reinterpret_cast<const PGresult*>(m_res)))
-    {
-        case PGRES_EMPTY_QUERY:
-            return Status::emptyQuery;
-        case PGRES_COMMAND_OK:
-            return Status::commandOk;
-        case PGRES_TUPLES_OK:
-            return Status::rowsOk;
-        case PGRES_COPY_OUT:
-            return Status::copyOut;
-        case PGRES_COPY_IN:
-            return Status::copyIn;
-        case PGRES_BAD_RESPONSE:
-            return Status::badResponse;
-        case PGRES_NONFATAL_ERROR:
-            return Status::nonfatalError;
-        case PGRES_COPY_BOTH:
-            return Status::copyBoth;
-        case PGRES_SINGLE_TUPLE:
-            return Status::singleTuple;
-        default:
-            return Status::fatalError;
-    };
+    const auto status = statuses.find(
+            PQresultStatus(reinterpret_cast<const PGresult*>(m_res)));
+
+    if(status == statuses.end())
+        return Status::fatalError;
+
+    return status->second;
 }
 
 unsigned Results_base::affectedRows() const
@@ -491,32 +488,26 @@ int Results_base::columns() const
     return PQnfields(reinterpret_cast<const PGresult*>(m_res));
 }
 
-const char* statusString(const Status status)
+const char* Fastcgipp::SQL::statusString(const Status status)
 {
-    switch(status)
-    {
-        case Status::noResult:
-            return "No Result";
-        case Status::emptyQuery:
-            return "Empty Query";
-        case Status::commandOk:
-            return "Command OK";
-        case Status::rowsOk:
-            return "Rows OK";
-        case Status::copyOut:
-            return "Copy Out";
-        case Status::copyIn:
-            return "Copy In";
-        case Status::badResponse:
-            return "Bad Response";
-        case Status::nonfatalError:
-            return "Non-fatal Error";
-        case Status::copyBoth:
-            return "Copy Both";
-        case Status::singleTuple:
-            return "Single Tuple";
-        case Status::fatalError:
-        default:
-            return "Fatal Error";
-    }
+    static const std::map<Status, const char*> statuses{
+        {Status::noResult, "No Result"},
+        {Status::emptyQuery, "Empty Query"},
+        {Status::commandOk, "Command OK"},
+        {Status::rowsOk, "Rows OK"},
+        {Status::copyOut, "Copy Out"},
+        {Status::copyIn, "Copy In"},
+        {Status::badResponse, "Bad Response"},
+        {Status::nonfatalError, "Non-fatal Error"},
+        {Status::copyBoth, "Copy Both"},
+        {Status::singleTuple, "Single Tuple"},
+        {Status::fatalError, "Fatal Error"},
+    };
+
+    auto it = statuses.find(status);
+
+    if(it == statuses.end())
+        it = statuses.find(Status::fatalError);
+
+    return it->second;
 }

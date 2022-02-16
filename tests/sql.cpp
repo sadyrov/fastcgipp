@@ -7,6 +7,7 @@
 #include <random>
 #include <sstream>
 #include <iomanip>
+#include <cstring>
 
 #include "fastcgi++/sql/connection.hpp"
 #include "fastcgi++/log.hpp"
@@ -347,7 +348,7 @@ bool TestQuery::handle()
 
         case 1:
         {
-            if(m_insertResult->status() != Status::rowsOk)
+            if(m_insertResult->status() != Status::rowsOk || std::strcmp(statusString(m_insertResult->status()), "Rows OK"))
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #4: " << m_insertResult->errorMessage())
             if(m_insertResult->rows() != 1)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #5")
@@ -472,7 +473,7 @@ bool TestQuery::handle()
 
         case 3:
         {
-            if(m_deleteResult->status() != Status::commandOk)
+            if(m_deleteResult->status() != Status::commandOk || std::strcmp(statusString(m_deleteResult->status()), "Command OK"))
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #22: " << m_deleteResult->errorMessage())
             if(m_deleteResult->rows() != 0)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #23")
