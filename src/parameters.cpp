@@ -2,13 +2,13 @@
  * @file       parameters.cpp
  * @brief      Defines SQL parameters types
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       December 2, 2020
- * @copyright  Copyright &copy; 2020 Eddie Carle. This project is released under
+ * @date       February 16, 2022
+ * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
 
 /*******************************************************************************
-* Copyright (C) 2020 Eddie Carle [eddie@isatec.ca]                             *
+* Copyright (C) 2022 Eddie Carle [eddie@isatec.ca]                             *
 *                                                                              *
 * This file is part of fastcgi++.                                              *
 *                                                                              *
@@ -70,9 +70,10 @@ const unsigned Fastcgipp::SQL::Parameter<std::wstring>::oid
     = Traits<std::wstring>::oid;
 const unsigned Fastcgipp::SQL::Parameter<std::vector<char>>::oid
     = Traits<std::vector<char>>::oid;
-const unsigned Fastcgipp::SQL::Parameter<
-    std::chrono::time_point<std::chrono::system_clock>>::oid
-    = Traits<std::chrono::time_point<std::chrono::system_clock>>::oid;
+const unsigned Fastcgipp::SQL::Parameter<Fastcgipp::SQL::TIMESTAMPTZ>::oid
+    = Traits<Fastcgipp::SQL::TIMESTAMPTZ>::oid;
+const unsigned Fastcgipp::SQL::Parameter<Fastcgipp::SQL::DATE>::oid
+    = Traits<Fastcgipp::SQL::DATE>::oid;
 const unsigned Fastcgipp::SQL::Parameter<Fastcgipp::Address>::oid
     = Traits<Fastcgipp::Address>::oid;
 const char Fastcgipp::SQL::Parameter<Fastcgipp::Address>::addressFamily

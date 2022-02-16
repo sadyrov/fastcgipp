@@ -2,12 +2,12 @@
  * @file       http.hpp
  * @brief      Declares the Address class
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       October 9, 2018
- * @copyright  Copyright &copy; 2018 Eddie Carle. This project is released under
+ * @date       February 16, 2022
+ * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
 /*******************************************************************************
-* Copyright (C) 2018 Eddie Carle [eddie@isatec.ca]                             *
+* Copyright (C) 2022 Eddie Carle [eddie@isatec.ca]                             *
 *                                                                              *
 * This file is part of fastcgi++.                                              *
 *                                                                              *
@@ -31,6 +31,7 @@
 #include <array>
 #include <algorithm>
 #include <cstring>
+#include <ios>
 
 //! Topmost namespace for the fastcgi++ library
 namespace Fastcgipp

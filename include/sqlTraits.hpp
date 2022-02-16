@@ -2,13 +2,13 @@
  * @file       sqlTraits.hpp
  * @brief      Defines SQL type traits
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       December 2, 2020
- * @copyright  Copyright &copy; 2020 Eddie Carle. This project is released under
+ * @date       February 16, 2022
+ * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
 
 /*******************************************************************************
-* Copyright (C) 2020 Eddie Carle [eddie@isatec.ca]                             *
+* Copyright (C) 2022 Eddie Carle [eddie@isatec.ca]                             *
 *                                                                              *
 * This file is part of fastcgi++.                                              *
 *                                                                              *
@@ -29,6 +29,7 @@
 #ifndef FASTCGIPP_SQL_TRAITS_HPP
 #define FASTCGIPP_SQL_TRAITS_HPP
 
+#include <string>
 #include <postgres.h>
 #include <libpq-fe.h>
 #include <catalog/pg_type.h>
@@ -38,6 +39,7 @@
 #undef ERROR
 
 #include "fastcgi++/http.hpp"
+#include "fastcgi++/sql/types.hpp"
 
 //! Topmost namespace for the fastcgi++ library
 namespace Fastcgipp
@@ -152,7 +154,7 @@ namespace Fastcgipp
                 return type == oid;
             }
         };
-        template<> struct Traits<std::chrono::time_point<std::chrono::system_clock>>
+        template<> struct Traits<TIMESTAMPTZ>
         {
             static constexpr unsigned oid = TIMESTAMPTZOID;
             static bool verifyType(const void* result, int column)
@@ -164,6 +166,20 @@ namespace Fastcgipp
                         reinterpret_cast<const PGresult*>(result),
                         column);
                 return type == oid && size == 8;
+            }
+        };
+        template<> struct Traits<DATE>
+        {
+            static constexpr unsigned oid = DATEOID;
+            static bool verifyType(const void* result, int column)
+            {
+                const Oid type = PQftype(
+                        reinterpret_cast<const PGresult*>(result),
+                        column);
+                const auto size = PQfsize(
+                        reinterpret_cast<const PGresult*>(result),
+                        column);
+                return type == oid && size == 4;
             }
         };
         template<> struct Traits<Fastcgipp::Address>

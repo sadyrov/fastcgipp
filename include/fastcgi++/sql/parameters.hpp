@@ -2,12 +2,12 @@
  * @file       parameters.hpp
  * @brief      Declares %SQL parameters types
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       December 2, 2020
- * @copyright  Copyright &copy; 2020 Eddie Carle. This project is released under
+ * @date       February 16, 2022
+ * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
 /*******************************************************************************
-* Copyright (C) 2020 Eddie Carle [eddie@isatec.ca]                             *
+* Copyright (C) 2022 Eddie Carle [eddie@isatec.ca]                             *
 *                                                                              *
 * This file is part of fastcgi++.                                              *
 *                                                                              *
@@ -30,6 +30,7 @@
 
 #include "fastcgi++/endian.hpp"
 #include "fastcgi++/address.hpp"
+#include "fastcgi++/sql/types.hpp"
 
 #include <tuple>
 #include <string>
@@ -160,30 +161,55 @@ namespace Fastcgipp
         };
 
         template<>
-        class Parameter<std::chrono::time_point<std::chrono::system_clock>>:
+        class Parameter<TIMESTAMPTZ>:
             public BigEndian<int64_t>
         {
         private:
             using BigEndian<int64_t>::operator=;
-            static int64_t convert(
-                    const std::chrono::time_point<std::chrono::system_clock>& x)
+            static int64_t convert(const TIMESTAMPTZ& x)
             {
-                return std::chrono::duration_cast<
-                    std::chrono::duration<int64_t, std::micro>>(
-                        x.time_since_epoch()-std::chrono::seconds(946684800)).count();
+                using namespace std::chrono;
+                constexpr TIMESTAMPTZ epoch(sys_days{January/1/2000});
+                return (x-epoch).count();
             }
 
         public:
-            Parameter& operator=(
-                    const std::chrono::time_point<std::chrono::system_clock>& x)
+            Parameter& operator=(const TIMESTAMPTZ& x)
             {
                 *this = convert(x);
                 return *this;
             }
 
-            Parameter(
-                    const std::chrono::time_point<std::chrono::system_clock>& x):
+            Parameter(const TIMESTAMPTZ& x):
                 BigEndian<int64_t>(convert(x))
+            {}
+
+            static const unsigned oid;
+        };
+
+        template<>
+        class Parameter<DATE>:
+            public BigEndian<int32_t>
+        {
+        private:
+            using BigEndian<int32_t>::operator=;
+            static int32_t convert(const DATE& x)
+            {
+                using namespace std::chrono;
+                constexpr time_point<system_clock, days> epoch(
+                        sys_days{January/1/2000});
+                return (sys_days(x)-epoch).count();
+            }
+
+        public:
+            Parameter& operator=(const DATE& x)
+            {
+                *this = convert(x);
+                return *this;
+            }
+
+            Parameter(const DATE& x):
+                BigEndian<int32_t>(convert(x))
             {}
 
             static const unsigned oid;

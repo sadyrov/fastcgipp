@@ -2,13 +2,13 @@
  * @file       results.cpp
  * @brief      Defines SQL results types
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       December 2, 2020
- * @copyright  Copyright &copy; 2020 Eddie Carle. This project is released under
+ * @date       February 16, 2022
+ * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
 
 /*******************************************************************************
-* Copyright (C) 2020 Eddie Carle [eddie@isatec.ca]                             *
+* Copyright (C) 2022 Eddie Carle [eddie@isatec.ca]                             *
 *                                                                              *
 * This file is part of fastcgi++.                                              *
 *                                                                              *
@@ -55,7 +55,9 @@ template bool Fastcgipp::SQL::Results_base::verifyColumn<float>(
 template bool Fastcgipp::SQL::Results_base::verifyColumn<double>(
         int column) const;
 template bool
-Fastcgipp::SQL::Results_base::verifyColumn<std::chrono::time_point<std::chrono::system_clock>>(
+Fastcgipp::SQL::Results_base::verifyColumn<Fastcgipp::SQL::TIMESTAMPTZ>(
+        int column) const;
+template bool Fastcgipp::SQL::Results_base::verifyColumn<Fastcgipp::SQL::DATE>(
         int column) const;
 template bool Fastcgipp::SQL::Results_base::verifyColumn<Fastcgipp::Address>(
         int column) const;
@@ -160,20 +162,34 @@ template<> void Fastcgipp::SQL::Results_base::field<std::wstring>(
     }
 }
 
-template<> void Fastcgipp::SQL::Results_base::field<
-  std::chrono::time_point<std::chrono::system_clock>>(
+template<> void Fastcgipp::SQL::Results_base::field<Fastcgipp::SQL::TIMESTAMPTZ>(
           int row,
           int column,
-          std::chrono::time_point<std::chrono::system_clock>& value) const
+          TIMESTAMPTZ& value) const
 {
-    const int64_t count = BigEndian<int64_t>::read(
-            PQgetvalue(reinterpret_cast<const PGresult*>(m_res), row, column));
+    using namespace std::chrono;
+    constexpr TIMESTAMPTZ epoch(sys_days{January/1/2000});
+    const microseconds microseconds(
+        BigEndian<int64_t>::read(PQgetvalue(
+                reinterpret_cast<const PGresult*>(m_res),
+                row,
+                column)));
+    value = epoch + microseconds;
+}
 
-    const std::chrono::duration<int64_t, std::micro> duration(count);
-
-    value = std::chrono::time_point<std::chrono::system_clock>(
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                duration)+std::chrono::seconds(946684800));
+template<> void Fastcgipp::SQL::Results_base::field<Fastcgipp::SQL::DATE>(
+          int row,
+          int column,
+          DATE& value) const
+{
+    using namespace std::chrono;
+    constexpr time_point<system_clock, days> epoch(sys_days{January/1/2000});
+    const days days(
+        BigEndian<int32_t>::read(PQgetvalue(
+                reinterpret_cast<const PGresult*>(m_res),
+                row,
+                column)));
+    value = epoch + days;
 }
 
 template<> void Fastcgipp::SQL::Results_base::field<Fastcgipp::Address>(

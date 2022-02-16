@@ -2,13 +2,13 @@
  * @file       results.hpp
  * @brief      Declares %SQL Results types
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       April 20, 2020
- * @copyright  Copyright &copy; 2020 Eddie Carle. This project is released under
+ * @date       February 16, 2022
+ * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
 
 /*******************************************************************************
-* Copyright (C) 2020 Eddie Carle [eddie@isatec.ca]                             *
+* Copyright (C) 2022 Eddie Carle [eddie@isatec.ca]                             *
 *                                                                              *
 * This file is part of fastcgi++.                                              *
 *                                                                              *
@@ -30,11 +30,10 @@
 #define FASTCGIPP_SQL_RESULTS_HPP
 
 #include <tuple>
-#include <string>
 #include <vector>
-#include <chrono>
 
 #include "fastcgi++/address.hpp"
+#include "fastcgi++/sql/types.hpp"
 
 //! Topmost namespace for the fastcgi++ library
 namespace Fastcgipp

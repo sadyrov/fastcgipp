@@ -34,12 +34,13 @@ private:
         double,
         std::vector<char>,
         std::wstring,
-        std::chrono::time_point<std::chrono::system_clock>,
+        Fastcgipp::SQL::TIMESTAMPTZ,
         Fastcgipp::Address,
         std::vector<int16_t>,
         std::vector<std::string>,
         std::vector<std::wstring>,
-        bool> m_parameters;
+        bool,
+        Fastcgipp::SQL::DATE> m_parameters;
 
     std::shared_ptr<Fastcgipp::SQL::Results<int32_t>> m_insertResult;
 
@@ -51,13 +52,14 @@ private:
         double,
         std::vector<char>,
         std::wstring,
-        std::chrono::time_point<std::chrono::system_clock>,
+        Fastcgipp::SQL::TIMESTAMPTZ,
         Fastcgipp::Address,
         std::vector<int16_t>,
         std::vector<std::string>,
         std::vector<std::wstring>,
         bool,
-        std::wstring>> m_selectResults;
+        std::wstring,
+        Fastcgipp::SQL::DATE>> m_selectResults;
 
     bool m_boolValue;
 
@@ -310,6 +312,8 @@ bool TestQuery::handle()
     {
         case 0:
         {
+            const auto now = std::chrono::system_clock::now();
+
             m_parameters = std::make_tuple(
                 int16dist(device),
                 int64dist(device),
@@ -318,16 +322,17 @@ bool TestQuery::handle()
                 doubledist(device),
                 vectors[stringdist(device)],
                 wstrings[stringdist(device)],
-                std::chrono::system_clock::now(),
+                std::chrono::time_point_cast<Fastcgipp::SQL::TIMESTAMPTZ::duration>(now),
                 addresses[stringdist(device)],
                 int16Vectors[stringdist(device)],
                 stringVectors[stringdist(device)],
                 wstringVectors[stringdist(device)],
-                m_boolValue);
+                m_boolValue,
+                std::chrono::time_point_cast<std::chrono::days>(now));
             m_insertResult.reset(new Fastcgipp::SQL::Results<int32_t>);
 
             Fastcgipp::SQL::Query query;
-            query.statement = "INSERT INTO fastcgipp_test (zero, one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen) VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING zero;";
+            query.statement = "INSERT INTO fastcgipp_test (zero, one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen) VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING zero;";
             query.parameters = Fastcgipp::SQL::make_Parameters(m_parameters);
             query.results = m_insertResult;
             query.callback = m_callback;
@@ -359,16 +364,17 @@ bool TestQuery::handle()
                     double,
                     std::vector<char>,
                     std::wstring,
-                    std::chrono::time_point<std::chrono::system_clock>,
+                    Fastcgipp::SQL::TIMESTAMPTZ,
                     Fastcgipp::Address,
                     std::vector<int16_t>,
                     std::vector<std::string>,
                     std::vector<std::wstring>,
                     bool,
-                    std::wstring>);
+                    std::wstring,
+                    Fastcgipp::SQL::DATE>);
 
             Fastcgipp::SQL::Query query;
-            query.statement = "SELECT one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, zero::text || ' ' || one::text || ' ' || two::text || ' ' || three || ' ' || to_char(four, '9.999EEEE') || ' ' || to_char(five, '9.999EEEE') || ' ' || seven || ' ' || to_char(eight, 'YYYY-MM-DD HH24:MI:SS') || ' ' || nine || ' [,' || array_to_string(ten, ',') || '] [,' || array_to_string(eleven, ',') || '] ' || thirteen AS fourteen FROM fastcgipp_test WHERE zero=$1;";
+            query.statement = "SELECT one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, zero::text || ' ' || one::text || ' ' || two::text || ' ' || three || ' ' || to_char(four, '9.999EEEE') || ' ' || to_char(five, '9.999EEEE') || ' ' || seven || ' ' || to_char(eight, 'YYYY-MM-DD HH24:MI:SS') || ' ' || nine || ' [,' || array_to_string(ten, ',') || '] [,' || array_to_string(eleven, ',') || '] ' || thirteen || ' ' || fourteen AS fourteen, fourteen AS fifteen FROM fastcgipp_test WHERE zero=$1;";
             query.parameters = parameters;
             query.results = m_selectResults;
             query.callback = m_callback;
@@ -404,13 +410,7 @@ bool TestQuery::handle()
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #16")
             if(std::get<6>(row) != std::get<6>(m_parameters))
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #17")
-            if(
-                    std::chrono::time_point_cast<
-                        std::chrono::duration<int64_t, std::micro>>(
-                            std::get<7>(row))
-                    != std::chrono::time_point_cast<
-                        std::chrono::duration<int64_t, std::micro>>(
-                            std::get<7>(m_parameters)))
+            if(std::get<7>(row) != std::get<7>(m_parameters))
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #18")
             if(std::get<8>(row) != std::get<8>(m_parameters))
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #19")
@@ -420,6 +420,8 @@ bool TestQuery::handle()
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #27")
             if(std::get<12>(row) != m_boolValue)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #28")
+            if(std::get<14>(row) != std::get<13>(m_parameters))
+                FAIL_LOG("Fastcgipp::SQL::Connection test fail #29")
 
             const std::time_t timeStamp = std::chrono::system_clock::to_time_t(
                     std::get<7>(m_parameters));
@@ -442,7 +444,8 @@ bool TestQuery::handle()
             ss << "] [";
             for(const auto& number: std::get<10>(m_parameters))
                 ss << "," << number.c_str();
-            ss << "] " << std::boolalpha << m_boolValue;
+            ss  << "] " << std::boolalpha << m_boolValue
+                << std::put_time(std::gmtime(&timeStamp), L" %Y-%m-%d");
 
             if(ss.str() != std::get<13>(row))
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #20 " << ss.str() << " vs " << std::get<13>(row))
