@@ -30,6 +30,10 @@
 #define FASTCGIPP_SQL_TYPES_HPP
 
 #include <chrono>
+#include <string>
+#include <vector>
+#include "fastcgi++/address.hpp"
+#include "fastcgi++/endian.hpp"
 
 //! Topmost namespace for the fastcgi++ library
 namespace Fastcgipp
@@ -37,10 +41,22 @@ namespace Fastcgipp
     //! Contains all fastcgi++ %SQL facilities
     namespace SQL
     {
+        typedef bool BOOL;
+        typedef int16_t SMALLINT;
+        typedef int32_t INTEGER;
+        typedef int64_t BIGINT;
+        typedef float REAL;
+        typedef double DOUBLE_PRECISION;
+        typedef std::string TEXT;
+        typedef std::wstring WTEXT;
         typedef std::chrono::year_month_day DATE;
         typedef std::chrono::time_point<
                 std::chrono::system_clock,
                 std::chrono::microseconds> TIMESTAMPTZ;
+        typedef Fastcgipp::Address INET;
+        template<class T> using ARRAY = std::vector<T>;
+        typedef ARRAY<char> BYTEA;
+        typedef BigEndian<int32_t> ARRAY_SIZE;
     }
 }
 

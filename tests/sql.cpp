@@ -21,49 +21,51 @@
 const unsigned totalQueries = 10000;
 const unsigned maxQueriesSize = 1000;
 
+using namespace Fastcgipp::SQL;
+
 class TestQuery
 {
 private:
-    static Fastcgipp::SQL::Connection connection;
+    static Connection connection;
 
     std::tuple<
-        int16_t,
-        int64_t,
-        std::string,
-        float,
-        double,
-        std::vector<char>,
-        std::wstring,
-        Fastcgipp::SQL::TIMESTAMPTZ,
-        Fastcgipp::Address,
-        std::vector<int16_t>,
-        std::vector<std::string>,
-        std::vector<std::wstring>,
-        bool,
-        Fastcgipp::SQL::DATE> m_parameters;
+        SMALLINT,
+        BIGINT,
+        TEXT,
+        REAL,
+        DOUBLE_PRECISION,
+        BYTEA,
+        WTEXT,
+        TIMESTAMPTZ,
+        INET,
+        ARRAY<SMALLINT>,
+        ARRAY<TEXT>,
+        ARRAY<WTEXT>,
+        BOOL,
+        DATE> m_parameters;
 
-    std::shared_ptr<Fastcgipp::SQL::Results<int32_t>> m_insertResult;
+    std::shared_ptr<Results<INTEGER>> m_insertResult;
 
-    std::shared_ptr<Fastcgipp::SQL::Results<
-        int16_t,
-        int64_t,
-        std::string,
-        float,
-        double,
-        std::vector<char>,
-        std::wstring,
-        Fastcgipp::SQL::TIMESTAMPTZ,
-        Fastcgipp::Address,
-        std::vector<int16_t>,
-        std::vector<std::string>,
-        std::vector<std::wstring>,
-        bool,
-        std::wstring,
-        Fastcgipp::SQL::DATE>> m_selectResults;
+    std::shared_ptr<Results<
+        SMALLINT,
+        BIGINT,
+        TEXT,
+        REAL,
+        DOUBLE_PRECISION,
+        BYTEA,
+        WTEXT,
+        TIMESTAMPTZ,
+        INET,
+        ARRAY<SMALLINT>,
+        ARRAY<TEXT>,
+        ARRAY<WTEXT>,
+        BOOL,
+        WTEXT,
+        DATE>> m_selectResults;
 
-    bool m_boolValue;
+    BOOL m_boolValue;
 
-    std::shared_ptr<Fastcgipp::SQL::Results<>> m_deleteResult;
+    std::shared_ptr<Results<>> m_deleteResult;
 
     std::function<void(Fastcgipp::Message)> m_callback;
 
@@ -77,19 +79,19 @@ private:
     static std::condition_variable wake;
 
     static std::random_device device;
-    static std::uniform_int_distribution<int16_t> int16dist;
-    static std::uniform_int_distribution<int32_t> int32dist;
-    static std::uniform_int_distribution<int64_t> int64dist;
-    static std::normal_distribution<float> floatdist;
-    static std::normal_distribution<double> doubledist;
+    static std::uniform_int_distribution<SMALLINT> smallIntDist;
+    static std::uniform_int_distribution<INTEGER> integerDist;
+    static std::uniform_int_distribution<BIGINT> bigIntDist;
+    static std::normal_distribution<REAL> floatdist;
+    static std::normal_distribution<DOUBLE_PRECISION> doubledist;
     static std::bernoulli_distribution boolDist;
-    static const std::array<std::wstring, 6> wstrings;
-    static const std::array<std::string, 6> strings;
-    static const std::array<std::vector<char>, 6> vectors;
-    static const std::array<Fastcgipp::Address, 6> addresses;
-    static const std::array<std::vector<int16_t>, 6> int16Vectors;
-    static const std::array<std::vector<std::string>, 6> stringVectors;
-    static const std::array<std::vector<std::wstring>, 6> wstringVectors;
+    static const std::array<WTEXT, 6> wstrings;
+    static const std::array<TEXT, 6> strings;
+    static const std::array<BYTEA, 6> vectors;
+    static const std::array<INET, 6> addresses;
+    static const std::array<ARRAY<SMALLINT>, 6> int16Vectors;
+    static const std::array<ARRAY<TEXT>, 6> stringVectors;
+    static const std::array<ARRAY<WTEXT>, 6> wstringVectors;
     static std::uniform_int_distribution<unsigned> stringdist;
 
     bool handle();
@@ -121,26 +123,26 @@ public:
     static void handler();
 };
 
-Fastcgipp::SQL::Connection TestQuery::connection;
+Connection TestQuery::connection;
 std::map<unsigned, TestQuery> TestQuery::queries;
 std::queue<unsigned> TestQuery::queue;
 std::mutex TestQuery::mutex;
 std::condition_variable TestQuery::wake;
 
 std::random_device TestQuery::device;
-std::uniform_int_distribution<int16_t> TestQuery::int16dist(
-        std::numeric_limits<int16_t>::min(),
-        std::numeric_limits<int16_t>::max());
-std::uniform_int_distribution<int32_t> TestQuery::int32dist(
-        std::numeric_limits<int32_t>::min(),
-        std::numeric_limits<int32_t>::max());
-std::uniform_int_distribution<int64_t> TestQuery::int64dist(
-        std::numeric_limits<int64_t>::min(),
-        std::numeric_limits<int64_t>::max());
-std::normal_distribution<float> TestQuery::floatdist(0, 1000);
-std::normal_distribution<double> TestQuery::doubledist(0, 10000);
+std::uniform_int_distribution<SMALLINT> TestQuery::smallIntDist(
+        std::numeric_limits<SMALLINT>::min(),
+        std::numeric_limits<SMALLINT>::max());
+std::uniform_int_distribution<INTEGER> TestQuery::integerDist(
+        std::numeric_limits<INTEGER>::min(),
+        std::numeric_limits<INTEGER>::max());
+std::uniform_int_distribution<BIGINT> TestQuery::bigIntDist(
+        std::numeric_limits<BIGINT>::min(),
+        std::numeric_limits<BIGINT>::max());
+std::normal_distribution<REAL> TestQuery::floatdist(0, 1000);
+std::normal_distribution<DOUBLE_PRECISION> TestQuery::doubledist(0, 10000);
 std::bernoulli_distribution TestQuery::boolDist(0.5);
-const std::array<std::wstring, 6> TestQuery::wstrings
+const std::array<WTEXT, 6> TestQuery::wstrings
 {
     L"Hello World",
     L"Привет мир",
@@ -149,7 +151,7 @@ const std::array<std::wstring, 6> TestQuery::wstrings
     L"今日は世界",
     L"ᚺᛖᛚᛟ ᚹᛟᛉᛚᛞ"
 };
-const std::array<std::string, 6> TestQuery::strings
+const std::array<TEXT, 6> TestQuery::strings
 {
     "Leviathan Wakes",
     "Caliban's War",
@@ -158,7 +160,7 @@ const std::array<std::string, 6> TestQuery::strings
     "Nemesis Games",
     "Babylon's Ashes"
 };
-const std::array<std::vector<char>, 6> TestQuery::vectors
+const std::array<BYTEA, 6> TestQuery::vectors
 {{
     {'a', 'b', 'c', 'd', 'e', 'f'},
     {'b', 'c', 'd', 'e', 'f'},
@@ -167,7 +169,7 @@ const std::array<std::vector<char>, 6> TestQuery::vectors
     {'e', 'f'},
     {'f'}
 }};
-const std::array<Fastcgipp::Address, 6> TestQuery::addresses
+const std::array<INET, 6> TestQuery::addresses
 {
     "cc22:4008:79a1:c178:5c5:882a:190d:7fbf",
     "ce9c:5116:7817::8d97:0:e755",
@@ -176,7 +178,7 @@ const std::array<Fastcgipp::Address, 6> TestQuery::addresses
     "ce9c:5116:7817::8d97:0:e755",
     "::ffff:179.124.131.145"
 };
-const std::array<std::vector<int16_t>, 6> TestQuery::int16Vectors
+const std::array<ARRAY<SMALLINT>, 6> TestQuery::int16Vectors
 {{
     {16045, -10447, -30005, -28036, -10498, -3546},
     {28951, -27341, 31934, -18029, -10289},
@@ -185,7 +187,7 @@ const std::array<std::vector<int16_t>, 6> TestQuery::int16Vectors
     {31456, 30510},
     {26529}
 }};
-const std::array<std::vector<std::string>, 6> TestQuery::stringVectors
+const std::array<ARRAY<TEXT>, 6> TestQuery::stringVectors
 {{
     {
         "The Fellowship of the Ring",
@@ -221,7 +223,7 @@ const std::array<std::vector<std::string>, 6> TestQuery::stringVectors
         "Babylon's Ashes"
     }
 }};
-const std::array<std::vector<std::wstring>, 6> TestQuery::wstringVectors
+const std::array<ARRAY<WTEXT>, 6> TestQuery::wstringVectors
 {{
     {
         L"Братство Кольца",
@@ -315,25 +317,25 @@ bool TestQuery::handle()
             const auto now = std::chrono::system_clock::now();
 
             m_parameters = std::make_tuple(
-                int16dist(device),
-                int64dist(device),
+                smallIntDist(device),
+                bigIntDist(device),
                 strings[stringdist(device)],
                 floatdist(device),
                 doubledist(device),
                 vectors[stringdist(device)],
                 wstrings[stringdist(device)],
-                std::chrono::time_point_cast<Fastcgipp::SQL::TIMESTAMPTZ::duration>(now),
+                std::chrono::time_point_cast<TIMESTAMPTZ::duration>(now),
                 addresses[stringdist(device)],
                 int16Vectors[stringdist(device)],
                 stringVectors[stringdist(device)],
                 wstringVectors[stringdist(device)],
                 m_boolValue,
                 std::chrono::time_point_cast<std::chrono::days>(now));
-            m_insertResult.reset(new Fastcgipp::SQL::Results<int32_t>);
+            m_insertResult.reset(new Results<INTEGER>);
 
             Fastcgipp::SQL::Query query;
             query.statement = "INSERT INTO fastcgipp_test (zero, one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen) VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING zero;";
-            query.parameters = Fastcgipp::SQL::make_Parameters(m_parameters);
+            query.parameters = make_Parameters(m_parameters);
             query.results = m_insertResult;
             query.callback = m_callback;
             if(!connection.queue(query))
@@ -345,7 +347,7 @@ bool TestQuery::handle()
 
         case 1:
         {
-            if(m_insertResult->status() != Fastcgipp::SQL::Status::rowsOk)
+            if(m_insertResult->status() != Status::rowsOk)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #4: " << m_insertResult->errorMessage())
             if(m_insertResult->rows() != 1)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #5")
@@ -353,25 +355,25 @@ bool TestQuery::handle()
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #6 " << m_insertResult->verify())
 
             const auto& row = m_insertResult->row(0);
-            const int32_t& id = std::get<0>(row);
+            const INTEGER& id = std::get<0>(row);
 
-            auto parameters = Fastcgipp::SQL::make_Parameters(id);
-            m_selectResults.reset(new Fastcgipp::SQL::Results<
-                    int16_t,
-                    int64_t,
-                    std::string,
-                    float,
-                    double,
-                    std::vector<char>,
-                    std::wstring,
-                    Fastcgipp::SQL::TIMESTAMPTZ,
-                    Fastcgipp::Address,
-                    std::vector<int16_t>,
-                    std::vector<std::string>,
-                    std::vector<std::wstring>,
-                    bool,
-                    std::wstring,
-                    Fastcgipp::SQL::DATE>);
+            auto parameters = make_Parameters(id);
+            m_selectResults.reset(new Results<
+                    SMALLINT,
+                    BIGINT,
+                    TEXT,
+                    REAL,
+                    DOUBLE_PRECISION,
+                    BYTEA,
+                    WTEXT,
+                    TIMESTAMPTZ,
+                    INET,
+                    ARRAY<SMALLINT>,
+                    ARRAY<TEXT>,
+                    ARRAY<WTEXT>,
+                    BOOL,
+                    WTEXT,
+                    DATE>);
 
             Fastcgipp::SQL::Query query;
             query.statement = "SELECT one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, zero::text || ' ' || one::text || ' ' || two::text || ' ' || three || ' ' || to_char(four, '9.999EEEE') || ' ' || to_char(five, '9.999EEEE') || ' ' || seven || ' ' || to_char(eight, 'YYYY-MM-DD HH24:MI:SS') || ' ' || nine || ' [,' || array_to_string(ten, ',') || '] [,' || array_to_string(eleven, ',') || '] ' || thirteen || ' ' || fourteen AS fourteen, fourteen AS fifteen FROM fastcgipp_test WHERE zero=$1;";
@@ -387,7 +389,7 @@ bool TestQuery::handle()
 
         case 2:
         {
-            if(m_selectResults->status() != Fastcgipp::SQL::Status::rowsOk)
+            if(m_selectResults->status() != Status::rowsOk)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #8: " << m_selectResults->errorMessage())
             if(m_selectResults->rows() != 1)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #9")
@@ -451,10 +453,10 @@ bool TestQuery::handle()
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #20 " << ss.str() << " vs " << std::get<13>(row))
 
             const auto& insertRow = m_insertResult->row(0);
-            const int32_t& id = std::get<0>(insertRow);
+            const INTEGER& id = std::get<0>(insertRow);
 
-            auto parameters = Fastcgipp::SQL::make_Parameters(id);
-            m_deleteResult.reset(new Fastcgipp::SQL::Results<>);
+            auto parameters = make_Parameters(id);
+            m_deleteResult.reset(new Results<>);
 
             Fastcgipp::SQL::Query query;
             query.statement = "DELETE FROM fastcgipp_test WHERE zero=$1;";
@@ -470,7 +472,7 @@ bool TestQuery::handle()
 
         case 3:
         {
-            if(m_deleteResult->status() != Fastcgipp::SQL::Status::commandOk)
+            if(m_deleteResult->status() != Status::commandOk)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #22: " << m_deleteResult->errorMessage())
             if(m_deleteResult->rows() != 0)
                 FAIL_LOG("Fastcgipp::SQL::Connection test fail #23")
@@ -489,22 +491,22 @@ int main()
 {
     // Test the SQL parameters stuff
     {
-        static const int16_t zero = -1413;
-        static const int32_t one = 123342945;
-        static const int64_t two = -123342945112312323;
-        static const std::string three = "This is a test!!34234";
-        static const float four = -1656e-8;
-        static const double five = 2354e15;
-        static const std::vector<char> six{'a', 'b', 'c', 'd', 'e', 'f'};
+        static const SMALLINT zero = -1413;
+        static const INTEGER one = 123342945;
+        static const BIGINT two = -123342945112312323;
+        static const TEXT three = "This is a test!!34234";
+        static const REAL four = -1656e-8;
+        static const DOUBLE_PRECISION five = 2354e15;
+        static const BYTEA six{'a', 'b', 'c', 'd', 'e', 'f'};
 
-        static const std::wstring seven(L"インターネット");
+        static const WTEXT seven(L"インターネット");
         static const std::array<unsigned char, 21> properSeven =
         {
             0xe3, 0x82, 0xa4, 0xe3, 0x83, 0xb3, 0xe3, 0x82, 0xbf, 0xe3, 0x83,
             0xbc, 0xe3, 0x83, 0x8d, 0xe3, 0x83, 0x83, 0xe3, 0x83, 0x88
         };
 
-        static const std::vector<int16_t> eight{14662,5312,-5209,24755,-17290};
+        static const ARRAY<SMALLINT> eight{14662,5312,-5209,24755,-17290};
         static std::array<unsigned char, 50> properEight{
             0x00, 0x00, 0x00, 0x01,
             0x00, 0x00, 0x00, 0x00,
@@ -522,7 +524,7 @@ int main()
             0x00, 0x00, 0x00, 0x02,
             0xbc, 0x76
         };
-        static const std::vector<std::string> nine{
+        static const ARRAY<TEXT> nine{
             "The Fellowship of the Ring",
             "The Two Towers",
             "The Return of the King"
@@ -540,7 +542,7 @@ int main()
             0x00, 0x00, 0x00, 22,
             'T','h','e',' ','R','e','t','u','r','n',' ','o','f',' ','t','h','e',' ','K','i','n','g'
         };
-        static const std::vector<std::wstring> ten{
+        static const ARRAY<WTEXT> ten{
             L"三体",
             L"黑暗森林",
             L"死神永生"
@@ -558,10 +560,10 @@ int main()
             0x00, 0x00, 0x00, 12,
             0xe6, 0xad, 0xbb, 0xe7, 0xa5, 0x9e, 0xe6, 0xb0, 0xb8, 0xe7, 0x94, 0x9f
         };
-        static const bool eleven = false;
-        static const bool twelve = true;
+        static const BOOL eleven = false;
+        static const BOOL twelve = true;
 
-        auto data(Fastcgipp::SQL::make_Parameters(
+        auto data(make_Parameters(
                 zero,
                 one,
                 two,
@@ -584,7 +586,7 @@ int main()
         for(unsigned i=0; i<ten.size(); ++i)
             if(ten[i] != std::get<10>(*data)[i])
                 FAIL_LOG("Fastcgipp::SQL::Parameters failed on column 10 []")
-        std::shared_ptr<Fastcgipp::SQL::Parameters_base> base(data);
+        std::shared_ptr<Parameters_base> base(data);
         data.reset();
 
         base->build();
@@ -592,19 +594,19 @@ int main()
         if(
                 *(base->oids()+0) != INT2OID ||
                 *(base->sizes()+0) != 2 ||
-                Fastcgipp::BigEndian<int16_t>::read(
+                Fastcgipp::BigEndian<SMALLINT>::read(
                     *(base->raws()+0)) != zero)
             FAIL_LOG("Fastcgipp::SQL::Parameters failed on column 0")
         if(
                 *(base->oids()+1) != INT4OID ||
                 *(base->sizes()+1) != 4 ||
-                Fastcgipp::BigEndian<int32_t>::read(
+                Fastcgipp::BigEndian<INTEGER>::read(
                     *(base->raws()+1)) != one)
             FAIL_LOG("Fastcgipp::SQL::Parameters failed on column 1")
         if(
                 *(base->oids()+2) != INT8OID ||
                 *(base->sizes()+2) != 8 ||
-                Fastcgipp::BigEndian<int64_t>::read(
+                Fastcgipp::BigEndian<BIGINT>::read(
                     *(base->raws()+2)) != two)
             FAIL_LOG("Fastcgipp::SQL::Parameters failed on column 2")
         if(
@@ -619,13 +621,13 @@ int main()
         if(
                 *(base->oids()+4) != FLOAT4OID ||
                 *(base->sizes()+4) != 4 ||
-                Fastcgipp::BigEndian<float>::read(
+                Fastcgipp::BigEndian<REAL>::read(
                     *(base->raws()+4)) != four)
             FAIL_LOG("Fastcgipp::SQL::Parameters failed on column 4")
         if(
                 *(base->oids()+5) != FLOAT8OID ||
                 *(base->sizes()+5) != 8 ||
-                Fastcgipp::BigEndian<double>::read(
+                Fastcgipp::BigEndian<DOUBLE_PRECISION>::read(
                     *(base->raws()+5)) != five)
             FAIL_LOG("Fastcgipp::SQL::Parameters failed on column 5")
         if(

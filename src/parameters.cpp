@@ -33,7 +33,9 @@
 #include <locale>
 #include <codecvt>
 
-void Fastcgipp::SQL::Parameters_base::build()
+using namespace Fastcgipp::SQL;
+
+void Parameters_base::build()
 {
     const int columns = size();
     m_raws.clear();
@@ -43,8 +45,7 @@ void Fastcgipp::SQL::Parameters_base::build()
     build_impl();
 }
 
-std::string
-Fastcgipp::SQL::Parameter<std::wstring>::convert(const std::wstring& x)
+TEXT Parameter<WTEXT>::convert(const WTEXT& x)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
     try
@@ -55,52 +56,42 @@ Fastcgipp::SQL::Parameter<std::wstring>::convert(const std::wstring& x)
     {
         WARNING_LOG("Error in code conversion to utf8 in SQL parameter")
     }
-    return std::string();
+    return TEXT();
 }
 
-const unsigned Fastcgipp::SQL::Parameter<bool>::oid = Traits<bool>::oid;
-const unsigned Fastcgipp::SQL::Parameter<int16_t>::oid = Traits<int16_t>::oid;
-const unsigned Fastcgipp::SQL::Parameter<int32_t>::oid = Traits<int32_t>::oid;
-const unsigned Fastcgipp::SQL::Parameter<int64_t>::oid = Traits<int64_t>::oid;
-const unsigned Fastcgipp::SQL::Parameter<float>::oid = Traits<float>::oid;
-const unsigned Fastcgipp::SQL::Parameter<double>::oid = Traits<double>::oid;
-const unsigned Fastcgipp::SQL::Parameter<std::string>::oid
-    = Traits<std::string>::oid;
-const unsigned Fastcgipp::SQL::Parameter<std::wstring>::oid
-    = Traits<std::wstring>::oid;
-const unsigned Fastcgipp::SQL::Parameter<std::vector<char>>::oid
-    = Traits<std::vector<char>>::oid;
-const unsigned Fastcgipp::SQL::Parameter<Fastcgipp::SQL::TIMESTAMPTZ>::oid
-    = Traits<Fastcgipp::SQL::TIMESTAMPTZ>::oid;
-const unsigned Fastcgipp::SQL::Parameter<Fastcgipp::SQL::DATE>::oid
-    = Traits<Fastcgipp::SQL::DATE>::oid;
-const unsigned Fastcgipp::SQL::Parameter<Fastcgipp::Address>::oid
-    = Traits<Fastcgipp::Address>::oid;
-const char Fastcgipp::SQL::Parameter<Fastcgipp::Address>::addressFamily
-    = Traits<Fastcgipp::Address>::addressFamily;
+const unsigned Parameter<BOOL>::oid = Traits<BOOL>::oid;
+const unsigned Parameter<SMALLINT>::oid = Traits<SMALLINT>::oid;
+const unsigned Parameter<INTEGER>::oid = Traits<INTEGER>::oid;
+const unsigned Parameter<BIGINT>::oid = Traits<BIGINT>::oid;
+const unsigned Parameter<REAL>::oid = Traits<REAL>::oid;
+const unsigned Parameter<DOUBLE_PRECISION>::oid = Traits<DOUBLE_PRECISION>::oid;
+const unsigned Parameter<TEXT>::oid = Traits<TEXT>::oid;
+const unsigned Parameter<WTEXT>::oid = Traits<WTEXT>::oid;
+const unsigned Parameter<BYTEA>::oid = Traits<BYTEA>::oid;
+const unsigned Parameter<TIMESTAMPTZ>::oid = Traits<TIMESTAMPTZ>::oid;
+const unsigned Parameter<DATE>::oid = Traits<DATE>::oid;
+const unsigned Parameter<INET>::oid = Traits<INET>::oid;
+const char Parameter<INET>::addressFamily = Traits<INET>::addressFamily;
 template<typename Numeric>
-const unsigned Fastcgipp::SQL::Parameter<std::vector<Numeric>>::oid
-    = Traits<std::vector<Numeric>>::oid;
-const unsigned Fastcgipp::SQL::Parameter<std::vector<std::string>>::oid
-    = Traits<std::vector<std::string>>::oid;
+const unsigned Parameter<ARRAY<Numeric>>::oid = Traits<ARRAY<Numeric>>::oid;
+const unsigned Parameter<ARRAY<TEXT>>::oid = Traits<ARRAY<TEXT>>::oid;
 
-template<typename Numeric>
-void Fastcgipp::SQL::Parameter<std::vector<Numeric>>::resize(
+template<typename Numeric> void Parameter<ARRAY<Numeric>>::resize(
         const unsigned size)
 {
-    m_size = sizeof(int32_t)*(5+size) + size*sizeof(Numeric);
+    m_size = sizeof(ARRAY_SIZE)*(5+size) + size*sizeof(Numeric);
     m_data.reset(new char[m_size]);
 
-    BigEndian<int32_t>& ndim(*reinterpret_cast<BigEndian<int32_t>*>(
-                m_data.get()+0*sizeof(int32_t)));
-    BigEndian<int32_t>& hasNull(*reinterpret_cast<BigEndian<int32_t>*>(
-                m_data.get()+1*sizeof(int32_t)));
-    BigEndian<int32_t>& elementType(*reinterpret_cast<BigEndian<int32_t>*>(
-                m_data.get()+2*sizeof(int32_t)));
-    BigEndian<int32_t>& dim(*reinterpret_cast<BigEndian<int32_t>*>(
-                m_data.get()+3*sizeof(int32_t)));
-    BigEndian<int32_t>& lBound(*reinterpret_cast<BigEndian<int32_t>*>(
-                m_data.get()+4*sizeof(int32_t)));
+    ARRAY_SIZE& ndim(*reinterpret_cast<ARRAY_SIZE*>(
+                m_data.get()+0*sizeof(ARRAY_SIZE)));
+    ARRAY_SIZE& hasNull(*reinterpret_cast<ARRAY_SIZE*>(
+                m_data.get()+1*sizeof(ARRAY_SIZE)));
+    ARRAY_SIZE& elementType(*reinterpret_cast<ARRAY_SIZE*>(
+                m_data.get()+2*sizeof(ARRAY_SIZE)));
+    ARRAY_SIZE& dim(*reinterpret_cast<ARRAY_SIZE*>(
+                m_data.get()+3*sizeof(ARRAY_SIZE)));
+    ARRAY_SIZE& lBound(*reinterpret_cast<ARRAY_SIZE*>(
+                m_data.get()+4*sizeof(ARRAY_SIZE)));
 
     ndim = 1;
     hasNull = 0;
@@ -110,22 +101,19 @@ void Fastcgipp::SQL::Parameter<std::vector<Numeric>>::resize(
 }
 
 template<typename Numeric>
-Fastcgipp::SQL::Parameter<std::vector<Numeric>>&
-Fastcgipp::SQL::Parameter<std::vector<Numeric>>::operator=(
-        const std::vector<Numeric>& x)
+Parameter<ARRAY<Numeric>>& Parameter<ARRAY<Numeric>>::operator=(
+        const ARRAY<Numeric>& x)
 {
     resize(x.size());
 
     for(unsigned i=0; i < x.size(); ++i)
     {
-        char* ptr = m_data.get() + 5*sizeof(int32_t)
-            + i*(sizeof(int32_t) + sizeof(Numeric));
+        char* ptr = m_data.get() + 5*sizeof(ARRAY_SIZE)
+            + i*(sizeof(ARRAY_SIZE) + sizeof(Numeric));
 
-        BigEndian<int32_t>& length(
-                *reinterpret_cast<BigEndian<int32_t>*>(ptr));
-        BigEndian<Numeric>& value(
-                *reinterpret_cast<BigEndian<Numeric>*>(
-                    ptr+sizeof(int32_t)));
+        ARRAY_SIZE& length(*reinterpret_cast<ARRAY_SIZE*>(ptr));
+        BigEndian<Numeric>& value(*reinterpret_cast<BigEndian<Numeric>*>(
+                    ptr+sizeof(ARRAY_SIZE)));
 
         length = sizeof(Numeric);
         value = x[i];
@@ -134,70 +122,66 @@ Fastcgipp::SQL::Parameter<std::vector<Numeric>>::operator=(
     return *this;
 }
 
-template class Fastcgipp::SQL::Parameter<std::vector<int16_t>>;
-template class Fastcgipp::SQL::Parameter<std::vector<int32_t>>;
-template class Fastcgipp::SQL::Parameter<std::vector<int64_t>>;
-template class Fastcgipp::SQL::Parameter<std::vector<float>>;
-template class Fastcgipp::SQL::Parameter<std::vector<double>>;
+template class Parameter<ARRAY<SMALLINT>>;
+template class Parameter<ARRAY<INTEGER>>;
+template class Parameter<ARRAY<BIGINT>>;
+template class Parameter<ARRAY<REAL>>;
+template class Parameter<ARRAY<DOUBLE_PRECISION>>;
 
-void Fastcgipp::SQL::Parameter<std::vector<std::string>>::assign(
-        const std::vector<std::string>& x)
+void Parameter<ARRAY<TEXT>>::assign(const ARRAY<TEXT>& x)
 {
     // Allocate the space
     {
         unsigned dataSize = 0;
         for(const auto& string: x)
             dataSize += string.size();
-        m_size = sizeof(int32_t)*(5+x.size()) + dataSize;
+        m_size = sizeof(ARRAY_SIZE)*(5+x.size()) + dataSize;
         m_data.reset(new char[m_size]);
-        BigEndian<int32_t>& ndim(*reinterpret_cast<BigEndian<int32_t>*>(
-                    m_data.get()+0*sizeof(int32_t)));
-        BigEndian<int32_t>& hasNull(*reinterpret_cast<BigEndian<int32_t>*>(
-                    m_data.get()+1*sizeof(int32_t)));
-        BigEndian<int32_t>& elementType(*reinterpret_cast<BigEndian<int32_t>*>(
-                    m_data.get()+2*sizeof(int32_t)));
-        BigEndian<int32_t>& dim(*reinterpret_cast<BigEndian<int32_t>*>(
-                    m_data.get()+3*sizeof(int32_t)));
-        BigEndian<int32_t>& lBound(*reinterpret_cast<BigEndian<int32_t>*>(
-                    m_data.get()+4*sizeof(int32_t)));
+        ARRAY_SIZE& ndim(*reinterpret_cast<ARRAY_SIZE*>(
+                    m_data.get()+0*sizeof(ARRAY_SIZE)));
+        ARRAY_SIZE& hasNull(*reinterpret_cast<ARRAY_SIZE*>(
+                    m_data.get()+1*sizeof(ARRAY_SIZE)));
+        ARRAY_SIZE& elementType(*reinterpret_cast<ARRAY_SIZE*>(
+                    m_data.get()+2*sizeof(ARRAY_SIZE)));
+        ARRAY_SIZE& dim(*reinterpret_cast<ARRAY_SIZE*>(
+                    m_data.get()+3*sizeof(ARRAY_SIZE)));
+        ARRAY_SIZE& lBound(*reinterpret_cast<ARRAY_SIZE*>(
+                    m_data.get()+4*sizeof(ARRAY_SIZE)));
 
         ndim = 1;
         hasNull = 0;
-        elementType = Traits<std::string>::oid;
+        elementType = Traits<TEXT>::oid;
         dim = x.size();
         lBound = 1;
     }
 
-    char* ptr = m_data.get() + 5*sizeof(int32_t);
+    char* ptr = m_data.get() + 5*sizeof(ARRAY_SIZE);
     for(const auto& string: x)
     {
-        BigEndian<int32_t>& length(
-                *reinterpret_cast<BigEndian<int32_t>*>(ptr));
+        ARRAY_SIZE& length(
+                *reinterpret_cast<ARRAY_SIZE*>(ptr));
         length = string.size();
-        ptr = std::copy(string.begin(), string.end(), ptr+sizeof(int32_t));
+        ptr = std::copy(string.begin(), string.end(), ptr+sizeof(ARRAY_SIZE));
     }
 }
 
-std::string Fastcgipp::SQL::Parameter<std::vector<std::string>>::operator[](
-        const unsigned x) const
+TEXT Parameter<ARRAY<TEXT>>::operator[](const unsigned x) const
 {
-    const char* ptr = m_data.get() + 5*sizeof(int32_t);
+    const char* ptr = m_data.get() + 5*sizeof(ARRAY_SIZE);
     unsigned i = 0;
     while(true)
     {
-        const int32_t length(*reinterpret_cast<const BigEndian<int32_t>*>(ptr));
-        ptr += sizeof(int32_t);
+        const int32_t length(*reinterpret_cast<const ARRAY_SIZE*>(ptr));
+        ptr += sizeof(ARRAY_SIZE);
         if(i++ == x)
-            return std::string(ptr, length);
+            return TEXT(ptr, length);
         ptr += length;
     }
 }
 
-std::vector<std::string>
-Fastcgipp::SQL::Parameter<std::vector<std::wstring>>::convert(
-        const std::vector<std::wstring>& x)
+ARRAY<TEXT> Parameter<ARRAY<WTEXT>>::convert(const ARRAY<WTEXT>& x)
 {
-    std::vector<std::string> result;
+    ARRAY<TEXT> result;
     result.reserve(x.size());
 
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
@@ -213,8 +197,7 @@ Fastcgipp::SQL::Parameter<std::vector<std::wstring>>::convert(
     return result;
 }
 
-std::wstring Fastcgipp::SQL::Parameter<std::vector<std::wstring>>::convert(
-        const std::string& x)
+WTEXT Parameter<ARRAY<WTEXT>>::convert(const TEXT& x)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
     try
@@ -225,5 +208,5 @@ std::wstring Fastcgipp::SQL::Parameter<std::vector<std::wstring>>::convert(
     {
         WARNING_LOG("Error in array code conversion from utf8 in SQL parameter")
     }
-    return std::wstring();
+    return WTEXT();
 }
