@@ -38,7 +38,7 @@ fastcgi++][1]].
 
 ## About ##
 
-This library is intended as a high-efficiency C++14 api for web development. It
+This library is intended as a high-efficiency C++20 api for web development. It
 allows your applications to communicate with web servers through the FastCGI
 protocol, tabulates all your environment data, manages character encoding, and
 allows requests to effectively share CPU time. If you want any further
