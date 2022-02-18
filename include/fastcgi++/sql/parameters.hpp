@@ -2,7 +2,7 @@
  * @file       parameters.hpp
  * @brief      Declares %SQL parameters types
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       February 16, 2022
+ * @date       February 18, 2022
  * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
@@ -344,12 +344,19 @@ namespace Fastcgipp
         //! De-templated base class for Parameters
         class Parameters_base
         {
+        private:
+            //! How many columns do we have?
+            const int m_size;
+
+            //! True indicates null on the respective column
+            std::vector<bool> m_nulls;
+
         protected:
             //! Array of oids for each parameter
             /*!
              * This gets initialized by calling build().
              */
-            const std::vector<unsigned>* m_oids;
+            const std::vector<unsigned>& m_oids;
 
             //! Array of raw data pointers for each parameter
             /*!
@@ -368,17 +375,22 @@ namespace Fastcgipp
              * This gets initialized by calling build(). It is really just an
              * array of 1s.
              */
-            const std::vector<int>* m_formats;
+            const std::vector<int>& m_formats;
 
-            //! Template side virtual to populate the above arrays
-            /*!
-             * This just gets called by build().
-             */
-            virtual void build_impl() =0;
+            Parameters_base(
+                    const std::vector<unsigned>& oids,
+                    const std::vector<int>& formats):
+                m_size(oids.size()),
+                m_nulls(m_size, false),
+                m_oids(oids),
+                m_raws(m_size),
+                m_sizes(m_size),
+                m_formats(formats)
+            {}
 
         public:
             //! Initialize the arrays needed by %SQL
-            void build();
+            virtual void build() =0;
 
             //! Constant pointer to array of all parameter oids
             /*!
@@ -386,7 +398,7 @@ namespace Fastcgipp
              */
             const unsigned* oids() const
             {
-                return m_oids->data();
+                return m_oids.data();
             }
 
             //! Constant pointer to pointer array of all raw parameter data
@@ -407,11 +419,26 @@ namespace Fastcgipp
             //! Constant pointer to array of all formats
             const int* formats() const
             {
-                return m_formats->data();
+                return m_formats.data();
             }
 
             //! How many parameters in this tuple?
-            virtual int size() const =0;
+            int size() const
+            {
+                return m_size;
+            }
+
+            //! Set a single parameter column to null (zero indexed)
+            void setNull(size_t column)
+            {
+                m_nulls[column] = true;
+            }
+
+            //! Check null on a single parameter column (zero indexed)
+            bool isNull(size_t column) const
+            {
+                return m_nulls[column];
+            }
 
             virtual ~Parameters_base() {}
         };
@@ -436,18 +463,15 @@ namespace Fastcgipp
             static const std::vector<unsigned> s_oids;
             static const std::vector<int> s_formats;
 
-            //! How many items in the tuple?
-            constexpr int size() const
-            {
-                return sizeof...(Types);
-            }
-
             //! Recursive template %SQL array building function
             template<size_t column, size_t... columns>
             inline void build_impl(std::index_sequence<column, columns...>)
             {
-                m_raws.push_back(std::get<column>(*this).data());
-                m_sizes.push_back(std::get<column>(*this).size());
+                if(isNull(column))
+                    m_raws[column] = nullptr;
+                else
+                    m_raws[column] = std::get<column>(*this).data();
+                m_sizes[column] = std::get<column>(*this).size();
                 build_impl(std::index_sequence<columns...>{});
             }
 
@@ -455,15 +479,29 @@ namespace Fastcgipp
             template<size_t column>
             inline void build_impl(std::index_sequence<column>)
             {
-                m_raws.push_back(std::get<column>(*this).data());
-                m_sizes.push_back(std::get<column>(*this).size());
+                if(isNull(column))
+                    m_raws[column] = nullptr;
+                else
+                    m_raws[column] = std::get<column>(*this).data();
+                m_sizes[column] = std::get<column>(*this).size();
             }
 
-            void build_impl();
+            void build();
 
-        public:
-            using std::tuple<Parameter<Types>...>::tuple;
-            using std::tuple<Parameter<Types>...>::operator=;
+            Parameters(const std::tuple<Types...>& tuple):
+                std::tuple<Parameter<Types>...>(tuple),
+                Parameters_base(s_oids, s_formats)
+            {}
+
+            Parameters(const Types&... args):
+                std::tuple<Parameter<Types>...>(args...),
+                Parameters_base(s_oids, s_formats)
+            {}
+
+            friend std::shared_ptr<Parameters<Types...>> make_Parameters<>(
+                    const Types&... args);
+            friend std::shared_ptr<Parameters<Types...>> make_Parameters<>(
+                    const std::tuple<Types...>& tuple);
         };
 
         template<typename... Types>
@@ -485,10 +523,8 @@ namespace Fastcgipp
 }
 
 template<typename... Types>
-void Fastcgipp::SQL::Parameters<Types...>::build_impl()
+void Fastcgipp::SQL::Parameters<Types...>::build()
 {
-    m_oids = &s_oids;
-    m_formats = &s_formats;
     build_impl(std::index_sequence_for<Types...>{});
 }
 

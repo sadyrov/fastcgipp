@@ -28,9 +28,9 @@ private:
 
     //! [Declare selectResults]
     std::shared_ptr<Fastcgipp::SQL::Results<
-        std::chrono::time_point<std::chrono::system_clock>,
-        Fastcgipp::Address,
-        std::string>> m_selectResults;
+        Fastcgipp::SQL::TIMESTAMPTZ,
+        Fastcgipp::SQL::INET,
+        Fastcgipp::SQL::TEXT>> m_selectResults;
     //! [Declare selectResults]
 
     //! [Response]
@@ -60,7 +60,8 @@ public:
                     "INSERT INTO fastcgipp_example (stamp, address, string) "
                     "VALUES ($1, $2, $3);";
                 query.parameters = Fastcgipp::SQL::make_Parameters(
-                        std::chrono::system_clock::now(),
+                        std::chrono::time_point_cast<Fastcgipp::SQL::TIMESTAMPTZ::duration>(
+                            std::chrono::system_clock::now()),
                         environment().remoteAddress,
                         s_strings[s_dist(s_device)]);
                 query.results = m_insertResult;
@@ -125,9 +126,9 @@ public:
 
                 //! [select query]
                 m_selectResults.reset(new Fastcgipp::SQL::Results<
-                        std::chrono::time_point<std::chrono::system_clock>,
-                        Fastcgipp::Address,
-                        std::string>);
+                        Fastcgipp::SQL::TIMESTAMPTZ,
+                        Fastcgipp::SQL::INET,
+                        Fastcgipp::SQL::TEXT>);
                 Fastcgipp::SQL::Query query;
                 query.statement =
                     "SELECT stamp, address, string FROM fastcgipp_example "

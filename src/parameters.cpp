@@ -2,7 +2,7 @@
  * @file       parameters.cpp
  * @brief      Defines SQL parameters types
  * @author     Eddie Carle &lt;eddie@isatec.ca&gt;
- * @date       February 16, 2022
+ * @date       February 18, 2022
  * @copyright  Copyright &copy; 2022 Eddie Carle. This project is released under
  *             the GNU Lesser General Public License Version 3.
  */
@@ -34,16 +34,6 @@
 #include <codecvt>
 
 using namespace Fastcgipp::SQL;
-
-void Parameters_base::build()
-{
-    const int columns = size();
-    m_raws.clear();
-    m_raws.reserve(columns);
-    m_sizes.clear();
-    m_sizes.reserve(columns);
-    build_impl();
-}
 
 TEXT Parameter<WTEXT>::convert(const WTEXT& x)
 {

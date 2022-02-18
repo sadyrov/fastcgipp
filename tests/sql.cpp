@@ -45,6 +45,8 @@ private:
         BOOL,
         DATE> m_parameters;
 
+    bool m_boolNull;
+
     std::shared_ptr<Results<INTEGER>> m_insertResult;
 
     std::shared_ptr<Results<
@@ -61,10 +63,8 @@ private:
         ARRAY<TEXT>,
         ARRAY<WTEXT>,
         BOOL,
-        WTEXT,
-        DATE>> m_selectResults;
-
-    BOOL m_boolValue;
+        DATE,
+        WTEXT>> m_selectResults;
 
     std::shared_ptr<Results<>> m_deleteResult;
 
@@ -99,8 +99,7 @@ private:
 
 public:
     TestQuery():
-        m_state(0),
-        m_boolValue(boolDist(device))
+        m_state(0)
     {
     }
 
@@ -330,13 +329,17 @@ bool TestQuery::handle()
                 int16Vectors[stringdist(device)],
                 stringVectors[stringdist(device)],
                 wstringVectors[stringdist(device)],
-                m_boolValue,
+                boolDist(device),
                 std::chrono::time_point_cast<std::chrono::days>(now));
             m_insertResult.reset(new Results<INTEGER>);
+
+            m_boolNull = boolDist(device);
 
             Fastcgipp::SQL::Query query;
             query.statement = "INSERT INTO fastcgipp_test (zero, one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen) VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING zero;";
             query.parameters = make_Parameters(m_parameters);
+            if(m_boolNull)
+                query.parameters->setNull(12);
             query.results = m_insertResult;
             query.callback = m_callback;
             if(!connection.queue(query))
@@ -373,11 +376,11 @@ bool TestQuery::handle()
                     ARRAY<TEXT>,
                     ARRAY<WTEXT>,
                     BOOL,
-                    WTEXT,
-                    DATE>);
+                    DATE,
+                    WTEXT>);
 
             Fastcgipp::SQL::Query query;
-            query.statement = "SELECT one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, zero::text || ' ' || one::text || ' ' || two::text || ' ' || three || ' ' || to_char(four, '9.999EEEE') || ' ' || to_char(five, '9.999EEEE') || ' ' || seven || ' ' || to_char(eight, 'YYYY-MM-DD HH24:MI:SS') || ' ' || nine || ' [,' || array_to_string(ten, ',') || '] [,' || array_to_string(eleven, ',') || '] ' || thirteen || ' ' || fourteen AS fourteen, fourteen AS fifteen FROM fastcgipp_test WHERE zero=$1;";
+            query.statement = "SELECT one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen, zero::text || ' ' || one::text || ' ' || two::text || ' ' || three || ' ' || to_char(four, '9.999EEEE') || ' ' || to_char(five, '9.999EEEE') || ' ' || seven || ' ' || to_char(eight, 'YYYY-MM-DD HH24:MI:SS') || ' ' || nine || ' [,' || array_to_string(ten, ',') || '] [,' || array_to_string(eleven, ',') || '] ' || COALESCE(thirteen::TEXT, 'null') || ' ' || fourteen AS fifteen FROM fastcgipp_test WHERE zero=$1;";
             query.parameters = parameters;
             query.results = m_selectResults;
             query.callback = m_callback;
@@ -399,32 +402,39 @@ bool TestQuery::handle()
 
             const auto& row = m_selectResults->row(0);
 
-            if(std::get<0>(row) != std::get<0>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #11")
-            if(std::get<1>(row) != std::get<1>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #12")
-            if(std::get<2>(row) != std::get<2>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #13")
-            if(std::get<3>(row) != std::get<3>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #14")
-            if(std::get<4>(row) != std::get<4>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #15")
-            if(std::get<5>(row) != std::get<5>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #16")
-            if(std::get<6>(row) != std::get<6>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #17")
-            if(std::get<7>(row) != std::get<7>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #18")
-            if(std::get<8>(row) != std::get<8>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #19")
-            if(std::get<9>(row) != std::get<9>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #26")
-            if(std::get<10>(row) != std::get<10>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #27")
-            if(std::get<12>(row) != m_boolValue)
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #28")
-            if(std::get<14>(row) != std::get<13>(m_parameters))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #29")
+            if(m_selectResults->null(0, 0) || std::get<0>(row) != std::get<0>(m_parameters))
+                FAIL_LOG("Check failed on column 0")
+            if(m_selectResults->null(0, 1) || std::get<1>(row) != std::get<1>(m_parameters))
+                FAIL_LOG("Check failed on column 1")
+            if(m_selectResults->null(0, 2) || std::get<2>(row) != std::get<2>(m_parameters))
+                FAIL_LOG("Check failed on column 2")
+            if(m_selectResults->null(0, 3) || std::get<3>(row) != std::get<3>(m_parameters))
+                FAIL_LOG("Check failed on column 3")
+            if(m_selectResults->null(0, 4) || std::get<4>(row) != std::get<4>(m_parameters))
+                FAIL_LOG("Check failed on column 4")
+            if(m_selectResults->null(0, 5) || std::get<5>(row) != std::get<5>(m_parameters))
+                FAIL_LOG("Check failed on column 5")
+            if(m_selectResults->null(0, 6) || std::get<6>(row) != std::get<6>(m_parameters))
+                FAIL_LOG("Check failed on column 6")
+            if(m_selectResults->null(0, 7) || std::get<7>(row) != std::get<7>(m_parameters))
+                FAIL_LOG("Check failed on column 7")
+            if(m_selectResults->null(0, 8) || std::get<8>(row) != std::get<8>(m_parameters))
+                FAIL_LOG("Check failed on column 8")
+            if(m_selectResults->null(0, 9) || std::get<9>(row) != std::get<9>(m_parameters))
+                FAIL_LOG("Check failed on column 9")
+            if(m_selectResults->null(0, 10) || std::get<10>(row) != std::get<10>(m_parameters))
+                FAIL_LOG("Check failed on column 10")
+            if(m_selectResults->null(0, 11) || std::get<11>(row) != std::get<11>(m_parameters))
+                FAIL_LOG("Check failed on column 11")
+            if(m_boolNull)
+            {
+                if(!m_selectResults->null(0, 12))
+                    FAIL_LOG("Null check failed on column 12")
+            }
+            else if(m_selectResults->null(0, 12) || std::get<12>(row) != std::get<12>(m_parameters))
+                FAIL_LOG("Check failed on column 12")
+            if(m_selectResults->null(0, 13) || std::get<13>(row) != std::get<13>(m_parameters))
+                FAIL_LOG("Check failed on column 13")
 
             const std::time_t timeStamp = std::chrono::system_clock::to_time_t(
                     std::get<7>(m_parameters));
@@ -447,11 +457,15 @@ bool TestQuery::handle()
             ss << "] [";
             for(const auto& number: std::get<10>(m_parameters))
                 ss << "," << number.c_str();
-            ss  << "] " << std::boolalpha << m_boolValue
-                << std::put_time(std::gmtime(&timeStamp), L" %Y-%m-%d");
+            ss  << "] ";
+            if(m_boolNull)
+                ss << "null";
+            else
+                ss << std::boolalpha << bool(std::get<12>(m_parameters));
+            ss  << std::put_time(std::gmtime(&timeStamp), L" %Y-%m-%d");
 
-            if(ss.str() != std::get<13>(row))
-                FAIL_LOG("Fastcgipp::SQL::Connection test fail #20 " << ss.str() << " vs " << std::get<13>(row))
+            if(ss.str() != std::get<14>(row))
+                FAIL_LOG("Fastcgipp::SQL::Connection test fail #20 " << ss.str() << " vs " << std::get<14>(row))
 
             const auto& insertRow = m_insertResult->row(0);
             const INTEGER& id = std::get<0>(insertRow);
