@@ -120,7 +120,7 @@ set_target_properties(fastcgipp PROPERTIES VERSION ${PROJECT_VERSION}
 
 find_package(Threads REQUIRED)
 target_link_libraries(fastcgipp PUBLIC Threads::Threads)
-target_compile_features(fastcgipp PRIVATE cxx_std_20)
+target_compile_features(fastcgipp PUBLIC cxx_std_20)
 if(UNIX)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         target_compile_options(fastcgipp PRIVATE -Wall -Werror -fno-omit-frame-pointer)
@@ -133,7 +133,7 @@ target_include_directories(fastcgipp PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/fastcgi++)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/Fastcgipp)
 
 install(TARGETS fastcgipp
     EXPORT FastcgippTargets
@@ -145,7 +145,8 @@ install(EXPORT FastcgippTargets
     NAMESPACE Fastcgipp::
     DESTINATION ${INSTALL_CONFIGDIR})
 
-GNUInstallDirs_get_absolute_install_dir(FASTCGIPP_INCLUDE_DIR CMAKE_INSTALL_INCLUDEDIR)
+GNUInstallDirs_get_absolute_install_dir(FASTCGIPP_INCLUDE_DIR
+    CMAKE_INSTALL_INCLUDEDIR INCLUDEDIR)
 
 #Create a ConfigVersion.cmake file
 include(CMakePackageConfigHelpers)
@@ -191,7 +192,6 @@ enable_testing()
 foreach(UNITTEST IN LISTS TESTS)
     add_executable(${UNITTEST}_test EXCLUDE_FROM_ALL tests/${UNITTEST}.cpp)
     target_link_libraries(${UNITTEST}_test PRIVATE Fastcgipp::fastcgipp)
-    target_compile_features(${UNITTEST}_test PRIVATE cxx_std_20)
     add_test("${UNITTEST}" ${UNITTEST}_test)
     list(APPEND TEST_TARGET ${UNITTEST}_test)
 endforeach()
@@ -201,7 +201,6 @@ if(SQL)
         "${CMAKE_CURRENT_BINARY_DIR}/sql_test.sh" @ONLY)
     add_executable(sql_test EXCLUDE_FROM_ALL tests/sql.cpp)
     target_link_libraries(sql_test PRIVATE Fastcgipp::fastcgipp)
-    target_compile_features(sql_test PRIVATE cxx_std_20)
     add_test("sql" sql_test.sh)
     list(APPEND TEST_TARGET sql_test)
     target_include_directories(sql_test PRIVATE ${PostgreSQL_INCLUDE_DIRS})
@@ -212,7 +211,6 @@ add_custom_target(tests DEPENDS ${TEST_TARGET})
 foreach(EXAMPLE IN LISTS EXAMPLES)
     add_executable(${EXAMPLE}.fcgi EXCLUDE_FROM_ALL examples/${EXAMPLE}.cpp)
     target_link_libraries(${EXAMPLE}.fcgi PRIVATE Fastcgipp::fastcgipp)
-    target_compile_features(${EXAMPLE}.fcgi PRIVATE cxx_std_20)
     list(APPEND EXAMPLE_TARGETS ${EXAMPLE}.fcgi)
 endforeach()
 add_custom_target(examples DEPENDS ${EXAMPLE_TARGETS})
