@@ -52,12 +52,16 @@ void Fastcgipp::Http::vecToString(
     }
 }
 
-template int Fastcgipp::Http::atoi<char>(const char* start, const char* end);
-template int Fastcgipp::Http::atoi<wchar_t>(
+template int Fastcgipp::Http::atoi<char, int>(const char* start, const char* end);
+template int Fastcgipp::Http::atoi<wchar_t, int>(
         const wchar_t* start,
         const wchar_t* end);
-template<class charT>
-int Fastcgipp::Http::atoi(const charT* start, const charT* end)
+template int64_t Fastcgipp::Http::atoi<char, int64_t>(const char* start, const char* end);
+template int64_t Fastcgipp::Http::atoi<wchar_t, int64_t>(
+        const wchar_t* start,
+        const wchar_t* end);
+template<class charT, class intT>
+intT Fastcgipp::Http::atoi(const charT* start, const charT* end)
 {
     bool neg=false;
     if(*start=='-')
@@ -65,7 +69,7 @@ int Fastcgipp::Http::atoi(const charT* start, const charT* end)
         neg=true;
         ++start;
     }
-    int result=0;
+    intT result=0;
     for(; 0x30 <= *start && *start <= 0x39 && start<end; ++start)
         result=result*10+(*start&0x0f);
 

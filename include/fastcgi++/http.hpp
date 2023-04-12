@@ -323,7 +323,8 @@ namespace Fastcgipp
          * @return Integer value represented by the string
          * @tparam charT Character type
          */
-        template<class charT> int atoi(const charT* start, const charT* end);
+        template<class charT, class intT = int>
+        intT atoi(const charT* start, const charT* end);
 
         //! Convert a char string to a float
         /*!
