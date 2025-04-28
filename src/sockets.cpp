@@ -205,8 +205,6 @@ bool Fastcgipp::SocketGroup::listen()
 {
     const int listen=0;
 
-    fcntl(listen, F_SETFL, fcntl(listen, F_GETFL)|O_NONBLOCK);
-
     if(m_listeners.find(listen) == m_listeners.end())
     {
         if(::listen(listen, 100) < 0)
