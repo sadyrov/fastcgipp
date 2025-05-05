@@ -205,6 +205,8 @@ bool Fastcgipp::SocketGroup::listen()
 {
     const int listen=0;
 
+    fcntl(listen, F_SETFL, fcntl(listen, F_GETFL)|O_NONBLOCK);
+
     if(m_listeners.find(listen) == m_listeners.end())
     {
         if(::listen(listen, 100) < 0)
@@ -572,9 +574,15 @@ void Fastcgipp::SocketGroup::createSocket(const socket_t listener)
             reinterpret_cast<sockaddr*>(&addr),
             &addrlen);
     if(socket<0)
+    {
+        if(errno == EAGAIN || errno == EWOULDBLOCK)
+            return;
+
         FAIL_LOG("Unable to accept() with fd " \
                 << listener << ": " \
                 << std::strerror(errno))
+    }
+
     if(fcntl(
             socket,
             F_SETFL,
