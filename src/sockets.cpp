@@ -339,7 +339,7 @@ bool Fastcgipp::SocketGroup::listen(
     }
 
     int fd=-1;
-    for(auto i=result; i!=nullptr; i=result->ai_next)
+    for(auto i=result; i!=nullptr; i=i->ai_next)
     {
         fd = socket(i->ai_family, i->ai_socktype, i->ai_protocol);
         if(fd == -1)
